@@ -19,14 +19,6 @@ gazelle(
 # Make the script file available
 exports_files(["go_mod_script.sh"])
 
-go_mod(
-    name = "go_mod",
-    go_mod = ":go.mod",
-    go_sum = ":go.sum",
-    module_path = "github.com/stefanpenner/bazel_go_mod",
-    deps = [],
-)
-
 # sh_test for go_mod rule
 sh_test(
     name = "go_mod_test",
