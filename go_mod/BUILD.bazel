@@ -8,9 +8,9 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 # gazelle:resolve go github.com/bazelbuild/bazel-gazelle/rule @gazelle//rule:rule
 
 go_library(
-    name = "go_modlang",
-    srcs = ["go_modlang.go"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/go_modlang",
+    name = "go_mod",
+    srcs = ["go_mod.go"],
+    importpath = "github.com/stefanpenner/bazel_go_mod/go_mod",
     visibility = ["//visibility:public"],
     deps = [
         "@gazelle//config",
@@ -23,8 +23,8 @@ go_library(
 )
 
 go_test(
-    name = "go_modlang_test",
-    srcs = ["go_modlang_test.go"],
-    embed = [":go_modlang"],
+    name = "go_mod_test",
+    srcs = ["go_mod_test.go"],
+    embed = [":go_mod"],
     deps = ["@gazelle//rule"],
 )

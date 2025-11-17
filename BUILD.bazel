@@ -6,7 +6,7 @@ gazelle_binary(
     languages = [
         "@gazelle//language/go",
         "@gazelle//language/proto",
-        "//go_modlang:go_modlang",
+        "//go_mod:go_mod",
     ],
     visibility = ["//visibility:public"],
 )

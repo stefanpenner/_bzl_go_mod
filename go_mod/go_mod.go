@@ -1,4 +1,4 @@
-package go_modlang
+package go_mod
 
 import (
 	"bufio"
