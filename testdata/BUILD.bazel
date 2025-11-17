@@ -1,0 +1,21 @@
+load("//:go_mod.bzl", "go_mod")
+
+# go_mod target for testing
+go_mod(
+    name = "test_go_mod",
+    go_mod = "//testdata:go.mod",
+    go_sum = "//testdata:go.sum",
+    deps = [
+        "//testdata/models",
+        "//testdata/utils",
+        "//testdata/cmd/app:app_lib",
+    ],
+)
+
+# sh_test for go_mod rule
+sh_test(
+    name = "go_mod_test",
+    srcs = ["go_mod_test.sh"],
+    data = [":test_go_mod"],
+    args = ["$(rootpath :test_go_mod)"],
+)

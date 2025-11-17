@@ -1,0 +1,16 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "models",
+    srcs = ["user.go"],
+    importpath = "github.com/stefanpenner/bazel_go_mod/models",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_google_uuid//:uuid"],
+)
+
+go_test(
+    name = "models_test",
+    srcs = ["user_test.go"],
+    embed = [":models"],
+    deps = ["@com_github_google_uuid//:uuid"],
+)
