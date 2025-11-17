@@ -30,5 +30,7 @@ sh_test(
         "//:gazelle_with_go_mod",
         "//testdata/gazelle_go_mod:all_files",
     ],
-    args = ["$(location //:gazelle_with_go_mod)"],
+    env = {
+        "GAZELLE_BIN": "$(location //:gazelle_with_go_mod)",
+    },
 )

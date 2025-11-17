@@ -5,7 +5,8 @@ load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
 gazelle_binary(
     name = "gazelle_with_go_mod",
     languages = [
-        "@gazelle//language/go:go_default_library",
+        "@gazelle//language/go",
+        "@gazelle//language/proto",
         "//go_modlang:go_modlang",
     ],
     visibility = ["//visibility:public"],

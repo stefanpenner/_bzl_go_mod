@@ -1,26 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Args:
-#   1: path to the custom gazelle_with_go_mod binary
-
-GAZELLE_BIN="$1"
-
-if [[ -z "${RUNFILES_DIR:-}" ]]; then
-  echo "RUNFILES_DIR is not set" >&2
-  exit 1
-fi
-
-if [[ -z "${TEST_WORKSPACE:-}" ]]; then
-  echo "TEST_WORKSPACE is not set" >&2
-  exit 1
-fi
-
-# Canonicalize the path to the Gazelle binary relative to the runfiles root.
-if [[ "${GAZELLE_BIN}" != /* ]]; then
-  GAZELLE_BIN="${RUNFILES_DIR}/${TEST_WORKSPACE}/${GAZELLE_BIN}"
-fi
-
 # Locate the test workspace copy of the gazelle_go_mod testdata.
 SRC_ROOT="${RUNFILES_DIR}/${TEST_WORKSPACE}/testdata/gazelle_go_mod"
 
@@ -29,20 +9,19 @@ if [[ ! -d "$SRC_ROOT" ]]; then
   exit 1
 fi
 
-WORKDIR="$(mktemp -d)"
-trap 'rm -rf "$WORKDIR"' EXIT
+WORKDIR="${TEST_TMPDIR}/go_mod_gazelle_integration"
+mkdir -p "${WORKDIR}"
 
 cp -R "${SRC_ROOT}/" "${WORKDIR}/workspace"
 REPO_ROOT="${WORKDIR}/workspace"
 
-if [[ -f "${REPO_ROOT}/BUILD.bazel" ]]; then
-  rm -f "${REPO_ROOT}/BUILD.bazel"
-fi
-
+GAZELLE_BIN="$(realpath $GAZELLE_BIN)"
 cd "${REPO_ROOT}"
 
 # Run gazelle in fix mode over the copied repo.
-"${GAZELLE_BIN}" -repo_root="${REPO_ROOT}" -mode=fix
+"${GAZELLE_BIN}" -repo_root="."
+
+echo "CWD: $(pwd)"
 
 # Verify that exactly one go_mod rule is generated for each go.mod-containing
 # directory, that module_path is derived from the go.mod contents, and that
@@ -94,15 +73,19 @@ grep -q 'go_mod = ":go.mod"' "$mod2_build" || {
 for build in "$mod1_build" "$mod2_build"; do
   # go_library must exist in the module root.
   if ! grep -q 'go_library(' "$build"; then
-    echo "Expected go_library rule in $build" >&2
+    echo "Expected go_library rule in $build but none was found. File contents:" >&2
+    sed -n '1,80p' "$build" >&2 || true
     exit 1
   fi
 
   # The go_mod rule should have a deps entry that references a local label.
   # We don't care about the exact name here, only that it depends on some
   # local target in this package.
-  if ! grep -A5 '^go_mod(' "$build" | grep -q '":'; then
-    echo "go_mod rule in $build does not depend on a local go_library" >&2
+  if ! grep -A10 '^go_mod(' "$build" | grep -q '":'; then
+    echo "go_mod rule in $build does not appear to depend on any local label (e.g. :lib). go_mod block:" >&2
+    grep -n -A10 -B2 '^go_mod(' "$build" >&2 || {
+      echo "No go_mod rule block could be located in $build" >&2
+    }
     exit 1
   fi
 done
