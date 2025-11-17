@@ -1,5 +1,5 @@
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
-load("//:go_mod.bzl", "go_mod")
+load("//rules/go_mod:go_mod.bzl", "go_mod")
 
 # gazelle:exclude testdata/*.bazel
 # gazelle:exclude testdata/**/*
@@ -18,18 +18,6 @@ gazelle(
     name = "gazelle",
     gazelle = ":gazelle_with_go_mod",
 )
-
-# Make the script file available
-exports_files(["go_mod_script.sh"])
-
-# sh_test for go_mod rule
-sh_test(
-    name = "go_mod_test",
-    srcs = ["//:go_mod_test.sh"],
-    args = ["$(rootpath //testdata:testdata.go_mod)"],
-    data = ["//testdata:testdata.go_mod"],
-)
-
 
 go_mod(
     name = "bazel_go_mod.go_mod",

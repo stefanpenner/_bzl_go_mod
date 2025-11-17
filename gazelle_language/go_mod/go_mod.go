@@ -47,7 +47,7 @@ func (*goModLanguage) Kinds() map[string]rule.KindInfo {
 func (*goModLanguage) Loads() []rule.LoadInfo {
 	return []rule.LoadInfo{
 		{
-			Name:    "//:go_mod.bzl",
+			Name:    "//rules/go_mod:go_mod.bzl",
 			Symbols: []string{"go_mod"},
 		},
 	}

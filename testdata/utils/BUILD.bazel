@@ -1,9 +1,0 @@
-exports_files(
-    [
-        "BUILD.bazel",
-        "utils.go",
-        "utils_test.go",
-    ],
-    visibility = ["//visibility:public"],
-)
-

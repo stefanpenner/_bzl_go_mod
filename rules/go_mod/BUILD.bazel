@@ -1,0 +1,10 @@
+# Make the script file available
+exports_files(["go_mod_script.sh", "go_mod_test.sh"])
+
+# sh_test for go_mod rule
+sh_test(
+    name = "go_mod_test",
+    srcs = [":go_mod_test.sh"],
+    args = ["$(rootpath //rules/go_mod/testdata:testdata.go_mod)"],
+    data = ["//rules/go_mod/testdata:testdata.go_mod"],
+)
