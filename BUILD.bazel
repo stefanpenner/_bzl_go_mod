@@ -1,19 +1,7 @@
 load("@gazelle//:def.bzl", "gazelle")
-load("//:go_mod.bzl", "go_mod")
 
 # gazelle:prefix github.com/stefanpenner/bazel_go_mod
 gazelle(name = "gazelle")
 
 # Make the script file available
 exports_files(["go_mod_script.sh"])
-
-# Example usage of the go_mod rule
-go_mod(
-    name = "generated_go_mod",
-    go_mod = "//:go.mod",
-    go_sum = "//:go.sum",
-    deps = [
-        "//models",
-        "//utils",
-    ],
-)
