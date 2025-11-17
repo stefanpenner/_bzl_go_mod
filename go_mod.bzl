@@ -133,7 +133,7 @@ def _go_mod_impl(ctx):
             "OUT_DIR": output_dir.path,
             "GO_MOD": ctx.file.go_mod.path,
             "GO_SUM": go_sum_file.path,
-            "MODULE_PATH": ctx.attr.importpath,
+            "MODULE_PATH": ctx.attr.module_path,
         },
         mnemonic = "GoModDirectory",
     )
@@ -151,7 +151,7 @@ def _go_mod_impl(ctx):
 go_mod = rule(
     implementation = _go_mod_impl,
     attrs = {
-        "importpath": attr.string(
+        "module_path": attr.string(
             mandatory = True,
             doc = "The Go module import path (e.g., example.com/my/module)",
         ),

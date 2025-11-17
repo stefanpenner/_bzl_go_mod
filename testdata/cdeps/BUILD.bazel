@@ -2,13 +2,14 @@ load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "cdeps",
-    srcs = ["foo.go"],
+    srcs = [
+        "foo.go",
+        "foo.h",
+    ],
     data = [
         "foo.c",
         "foo.h",
     ],
-    importpath = "github.com/stefanpenner/bazel_go_mod/cdeps",
+    importpath = "github.com/stefanpenner/bazel_go_mod/testdata/cdeps",
     visibility = ["//visibility:public"],
 )
-
-

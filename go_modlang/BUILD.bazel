@@ -1,17 +1,24 @@
 load("@rules_go//go:def.bzl", "go_library", "go_test")
 
+# gazelle:resolve go github.com/bazelbuild/bazel-gazelle/config @gazelle//config:config
+# gazelle:resolve go github.com/bazelbuild/bazel-gazelle/label @gazelle//label:label
+# gazelle:resolve go github.com/bazelbuild/bazel-gazelle/language @gazelle//language:language
+# gazelle:resolve go github.com/bazelbuild/bazel-gazelle/repo @gazelle//repo:repo
+# gazelle:resolve go github.com/bazelbuild/bazel-gazelle/resolve @gazelle//resolve:resolve
+# gazelle:resolve go github.com/bazelbuild/bazel-gazelle/rule @gazelle//rule:rule
+
 go_library(
     name = "go_modlang",
     srcs = ["go_modlang.go"],
     importpath = "github.com/stefanpenner/bazel_go_mod/go_modlang",
     visibility = ["//visibility:public"],
     deps = [
-        "@gazelle//config:go_default_library",
-        "@gazelle//label:go_default_library",
-        "@gazelle//language:go_default_library",
-        "@gazelle//repo:go_default_library",
-        "@gazelle//resolve:go_default_library",
-        "@gazelle//rule:go_default_library",
+        "@gazelle//config",
+        "@gazelle//label",
+        "@gazelle//language",
+        "@gazelle//repo",
+        "@gazelle//resolve",
+        "@gazelle//rule",
     ],
 )
 
@@ -19,6 +26,5 @@ go_test(
     name = "go_modlang_test",
     srcs = ["go_modlang_test.go"],
     embed = [":go_modlang"],
+    deps = ["@gazelle//rule"],
 )
-
-

@@ -1,6 +1,5 @@
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
-
-# gazelle:prefix github.com/stefanpenner/bazel_go_mod
+load("//:go_mod.bzl", "go_mod")
 
 gazelle_binary(
     name = "gazelle_with_go_mod",
@@ -19,3 +18,11 @@ gazelle(
 
 # Make the script file available
 exports_files(["go_mod_script.sh"])
+
+go_mod(
+    name = "go_mod",
+    go_mod = ":go.mod",
+    go_sum = ":go.sum",
+    module_path = "github.com/stefanpenner/bazel_go_mod",
+    deps = [],
+)
