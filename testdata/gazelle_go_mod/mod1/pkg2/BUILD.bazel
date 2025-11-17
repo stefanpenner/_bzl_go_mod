@@ -1,2 +1,9 @@
-exports_files(["BUILD.bazel", "pkg2.go"], visibility = ["//visibility:public"])
+load("@rules_go//go:def.bzl", "go_library")
 
+exports_files(
+    [
+        "BUILD.bazel",
+        "pkg2.go",
+    ],
+    visibility = ["//visibility:public"],
+)

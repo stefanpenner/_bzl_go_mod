@@ -78,8 +78,14 @@ func (*goModLanguage) GenerateRules(args language.GenerateArgs) language.Generat
 		labelsSet[lbl] = true
 	}
 	for _, r := range args.OtherGen {
+		// Include all go_library rules from OtherGen unless they're slated for removal
 		if r.Kind() == "go_library" {
-			labelsSet[":"+r.Name()] = true
+			// Check ShouldKeep() to filter out rules explicitly marked for deletion.
+			// Note: In real Gazelle execution, newly generated rules in OtherGen
+			// should have ShouldKeep() return true unless explicitly deleted.
+			if r.ShouldKeep() {
+				labelsSet[":"+r.Name()] = true
+			}
 		}
 	}
 
@@ -170,7 +176,7 @@ func collectGoLibraries(f *rule.File) []string {
 	}
 	var labels []string
 	for _, r := range f.Rules {
-		if r.Kind() == "go_library" {
+		if r.Kind() == "go_library" && r.ShouldKeep() {
 			labels = append(labels, ":"+r.Name())
 		}
 	}

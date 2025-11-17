@@ -6,6 +6,8 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 # gazelle:resolve go github.com/bazelbuild/bazel-gazelle/repo @gazelle//repo:repo
 # gazelle:resolve go github.com/bazelbuild/bazel-gazelle/resolve @gazelle//resolve:resolve
 # gazelle:resolve go github.com/bazelbuild/bazel-gazelle/rule @gazelle//rule:rule
+# gazelle:resolve go github.com/stretchr/testify/assert @com_github_stretchr_testify//assert
+# gazelle:resolve go github.com/stretchr/testify/require @com_github_stretchr_testify//require
 
 go_library(
     name = "go_mod",
@@ -26,5 +28,10 @@ go_test(
     name = "go_mod_test",
     srcs = ["go_mod_test.go"],
     embed = [":go_mod"],
-    deps = ["@gazelle//rule"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+        "@gazelle//language",
+        "@gazelle//rule",
+    ],
 )
