@@ -1,10 +1,1 @@
-load("@rules_go//go:def.bzl", "go_library")
-
 exports_files(["BUILD.bazel", "pkg1.go"], visibility = ["//visibility:public"])
-
-go_library(
-    name = "pkg1",
-    srcs = ["pkg1.go"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/testdata/gazelle_go_mod/mod1/pkg1",
-    visibility = ["//visibility:public"],
-)
