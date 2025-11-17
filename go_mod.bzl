@@ -61,42 +61,83 @@ def _go_mod_impl(ctx):
             if hasattr(go_info, "embedsrcs"):
                 all_src_files = depset(transitive = [all_src_files, _collect_srcs(go_info.embedsrcs)])
     
-    # Collect all input files (go.mod, go.sum, and all transitive source files)
-    input_files = [ctx.file.go_mod]
-    if ctx.file.go_sum:
-        input_files.append(ctx.file.go_sum)
-    
-    # Add all transitive source files as inputs to ensure dependency tracking
-    all_input_files = depset(input_files, transitive = [all_src_files])
-    
     # Create output directory
     output_dir = ctx.actions.declare_directory(ctx.attr.name)
     
-    # Collect all source files into a list for the script
-    src_files_list = all_src_files.to_list()
+    # Ensure go.sum exists - create empty file if not provided
+    go_sum_file = ctx.file.go_sum
+    if not go_sum_file:
+        go_sum_file = ctx.actions.declare_file(ctx.attr.name + "_empty.sum")
+        ctx.actions.write(
+            output = go_sum_file,
+            content = "",
+        )
+    
+    # Extract module path from go.mod using a helper action
+    module_path_file = ctx.actions.declare_file(ctx.attr.name + "_module_path")
+    ctx.actions.run_shell(
+        inputs = [ctx.file.go_mod],
+        outputs = [module_path_file],
+        command = "grep '^module ' '{}' | head -1 | sed 's/^module //' | tr -d '\\r\\n' > '{}'".format(
+            ctx.file.go_mod.path,
+            module_path_file.path,
+        ),
+    )
+    
+    # Collect all input files
+    input_files = [ctx.file.go_mod, go_sum_file, module_path_file]
+    
+    # Map files to their importpaths by tracking which GoInfo they come from
+    file_to_importpath = {}
+    for dep in ctx.attr.deps:
+        if GoInfo in dep:
+            go_info = dep[GoInfo]
+            importpath = go_info.importpath
+            if hasattr(go_info, "srcs"):
+                for src_file in go_info.srcs:
+                    # Check if file is from external repository
+                    owner = src_file.owner
+                    if owner and owner.workspace_name:
+                        continue
+                    if src_file.short_path.startswith("external/"):
+                        continue
+                    file_to_importpath[src_file] = importpath
+            if hasattr(go_info, "embedsrcs"):
+                for embed_file in go_info.embedsrcs:
+                    owner = embed_file.owner
+                    if owner and owner.workspace_name:
+                        continue
+                    if embed_file.short_path.startswith("external/"):
+                        continue
+                    file_to_importpath[embed_file] = importpath
+    
+    # Add all source files to inputs
+    workspace_files_list = list(file_to_importpath.keys())
+    all_input_files = depset(input_files + workspace_files_list, transitive = [all_src_files])
     
     # Use the external script file
     script_file = ctx.file._script
     
-    # Build command arguments: output_dir, go_mod, go_sum, and file pairs
-    cmd_args = [output_dir.path, ctx.file.go_mod.path]
-    if ctx.file.go_sum:
-        cmd_args.append(ctx.file.go_sum.path)
-    else:
-        cmd_args.append("")
+    # Build command arguments: src_file importpath pairs
+    cmd_args = []
+    for src_file, importpath in file_to_importpath.items():
+        cmd_args.append(src_file.path)
+        cmd_args.append(importpath)
     
-    # Add file path pairs (file_path|short_path)
-    for src_file in src_files_list:
-        cmd_args.append("{}|{}".format(src_file.path, src_file.short_path))
-    
-    # Run the script
-    # Include script_file and all source files in inputs
-    all_script_inputs = depset([script_file], transitive = [all_input_files])
+    # Run the script with environment variables
+    # Module path will be read from the file at action time
+    all_script_inputs = depset([script_file, module_path_file], transitive = [all_input_files])
     ctx.actions.run(
         inputs = all_script_inputs,
         outputs = [output_dir],
         executable = script_file,
         arguments = cmd_args,
+        env = {
+            "OUT_DIR": output_dir.path,
+            "GO_MOD": ctx.file.go_mod.path,
+            "GO_SUM": go_sum_file.path,
+            "MODULE_PATH_FILE": module_path_file.path,
+        },
         mnemonic = "GoModDirectory",
     )
     
