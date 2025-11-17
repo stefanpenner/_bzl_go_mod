@@ -1,4 +1,19 @@
-exports_files([
-    "go_mod_test.sh",
-    "go_mod_gazelle_integration_test.sh",
-])
+load("//:go_mod.bzl", "go_mod")
+
+go_mod(
+    name = "testdata.go_mod",
+    go_mod = "//testdata:go.mod",
+    go_sum = "//testdata:go.sum",
+    module_path = "github.com/stefanpenner/bazel_go_mod",
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
+exports_files(
+    [
+        "BUILD.bazel",
+        "go.mod",
+        "go.sum",
+    ],
+    visibility = ["//visibility:public"],
+)

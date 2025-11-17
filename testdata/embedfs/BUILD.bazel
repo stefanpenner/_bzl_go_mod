@@ -1,0 +1,9 @@
+exports_files(
+    [
+        "BUILD.bazel",
+        "data.txt",
+        "embedfs.go",
+    ],
+    visibility = ["//visibility:public"],
+)
+

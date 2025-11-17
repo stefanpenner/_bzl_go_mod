@@ -7,10 +7,3 @@ exports_files(
     ],
     visibility = ["//visibility:public"],
 )
-
-go_mod(
-    name = "go_mod",
-    go_mod = ":go.mod",
-    module_path = "example.com/mod2",
-    deps = [],
-)

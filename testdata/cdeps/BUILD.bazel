@@ -1,0 +1,10 @@
+exports_files(
+    [
+        "BUILD.bazel",
+        "foo.c",
+        "foo.go",
+        "foo.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
