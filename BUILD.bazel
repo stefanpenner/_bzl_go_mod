@@ -9,7 +9,7 @@ gazelle_binary(
     languages = [
         "@gazelle//language/go",
         "@gazelle//language/proto",
-        "//go_mod:go_mod",
+        "//gazelle_language/go_mod:go_mod",
     ],
     visibility = ["//visibility:public"],
 )
@@ -30,17 +30,6 @@ sh_test(
     data = ["//testdata:testdata.go_mod"],
 )
 
-sh_test(
-    name = "go_mod_gazelle_integration_test",
-    srcs = ["//:go_mod_gazelle_integration_test.sh"],
-    data = [
-        "//:gazelle_with_go_mod",
-        "//testdata/gazelle_go_mod:all_files",
-    ],
-    env = {
-        "GAZELLE_BIN": "$(location //:gazelle_with_go_mod)",
-    },
-)
 
 go_mod(
     name = "bazel_go_mod.go_mod",

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # this is the testdata that we will run against.
 # Think of it like fixture data
-SRC_ROOT="${RUNFILES_DIR}/${TEST_WORKSPACE}/testdata/gazelle_go_mod"
+SRC_ROOT="${RUNFILES_DIR}/${TEST_WORKSPACE}/gazelle_language/go_mod/testdata"
 
 # Copy the entire gazelle_go_mod directory into TEST_TMPDIR, following symlinks
 cp -RL "${SRC_ROOT}/" "${TEST_TMPDIR}/workspace"

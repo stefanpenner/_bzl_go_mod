@@ -1,0 +1,18 @@
+filegroup(
+    name = "all_files",
+    srcs = [
+        "BUILD.bazel",
+        "//gazelle_language/go_mod/testdata/mod1:BUILD.bazel",
+        "//gazelle_language/go_mod/testdata/mod1:go.mod",
+        "//gazelle_language/go_mod/testdata/mod1:root.go",
+        "//gazelle_language/go_mod/testdata/mod1/pkg1:BUILD.bazel",
+        "//gazelle_language/go_mod/testdata/mod1/pkg1:pkg1.go",
+        "//gazelle_language/go_mod/testdata/mod1/pkg2:BUILD.bazel",
+        "//gazelle_language/go_mod/testdata/mod1/pkg2:pkg2.go",
+        "//gazelle_language/go_mod/testdata/mod2:BUILD.bazel",
+        "//gazelle_language/go_mod/testdata/mod2:go.mod",
+        "//gazelle_language/go_mod/testdata/mod2/pkg3:BUILD.bazel",
+        "//gazelle_language/go_mod/testdata/mod2/pkg3:pkg3.go",
+    ],
+    visibility = ["//visibility:public"],
+)

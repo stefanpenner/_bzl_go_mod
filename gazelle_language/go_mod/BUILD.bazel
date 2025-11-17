@@ -35,3 +35,18 @@ go_test(
         "@gazelle//rule",
     ],
 )
+
+# Make the integration test script available
+exports_files(["integration_test.sh"])
+
+sh_test(
+    name = "integration_test",
+    srcs = [":integration_test.sh"],
+    data = [
+        "//:gazelle_with_go_mod",
+        "//gazelle_language/go_mod/testdata:all_files",
+    ],
+    env = {
+        "GAZELLE_BIN": "$(location //:gazelle_with_go_mod)",
+    },
+)
