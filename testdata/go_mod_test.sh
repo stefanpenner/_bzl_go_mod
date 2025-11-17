@@ -24,6 +24,15 @@ echo "test root: $(pwd)"
 # Assert cmd/app/main.go exists
 [ -f "cmd/app/main.go" ] || { echo "ERROR: cmd/app/main.go not found"; exit 1; }
 
+# Assert embedfs files exist (Go source and embedded data)
+[ -f "embedfs/embedfs.go" ] || { echo "ERROR: embedfs/embedfs.go not found"; exit 1; }
+[ -f "embedfs/data.txt" ] || { echo "ERROR: embedfs/data.txt not found"; exit 1; }
+
+# Assert cdeps CGo-related files exist (.go, .c, and .h)
+[ -f "cdeps/foo.go" ] || { echo "ERROR: cdeps/foo.go not found"; exit 1; }
+[ -f "cdeps/foo.c" ] || { echo "ERROR: cdeps/foo.c not found"; exit 1; }
+[ -f "cdeps/foo.h" ] || { echo "ERROR: cdeps/foo.h not found"; exit 1; }
+
 # Assert no external dependencies are included
 [ ! -d "gazelle++go_deps+com_github_google_uuid" ] || { echo "ERROR: External dependencies should not be included"; exit 1; }
 

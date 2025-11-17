@@ -1,7 +1,20 @@
-load("@gazelle//:def.bzl", "gazelle")
+load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
 
 # gazelle:prefix github.com/stefanpenner/bazel_go_mod
-gazelle(name = "gazelle")
+
+gazelle_binary(
+    name = "gazelle_with_go_mod",
+    languages = [
+        "@gazelle//language/go:go_default_library",
+        "//go_modlang:go_modlang",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+gazelle(
+    name = "gazelle",
+    gazelle = ":gazelle_with_go_mod",
+)
 
 # Make the script file available
 exports_files(["go_mod_script.sh"])
