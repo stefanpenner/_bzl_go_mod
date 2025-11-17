@@ -73,19 +73,8 @@ def _go_mod_impl(ctx):
             content = "",
         )
     
-    # Extract module path from go.mod using a helper action
-    module_path_file = ctx.actions.declare_file(ctx.attr.name + "_module_path")
-    ctx.actions.run_shell(
-        inputs = [ctx.file.go_mod],
-        outputs = [module_path_file],
-        command = "grep '^module ' '{}' | head -1 | sed 's/^module //' | tr -d '\\r\\n' > '{}'".format(
-            ctx.file.go_mod.path,
-            module_path_file.path,
-        ),
-    )
-    
     # Collect all input files
-    input_files = [ctx.file.go_mod, go_sum_file, module_path_file]
+    input_files = [ctx.file.go_mod, go_sum_file]
     
     # Map files to their importpaths by tracking which GoInfo they come from
     file_to_importpath = {}
@@ -125,8 +114,7 @@ def _go_mod_impl(ctx):
         cmd_args.append(importpath)
     
     # Run the script with environment variables
-    # Module path will be read from the file at action time
-    all_script_inputs = depset([script_file, module_path_file], transitive = [all_input_files])
+    all_script_inputs = depset([script_file], transitive = [all_input_files])
     ctx.actions.run(
         inputs = all_script_inputs,
         outputs = [output_dir],
@@ -136,7 +124,7 @@ def _go_mod_impl(ctx):
             "OUT_DIR": output_dir.path,
             "GO_MOD": ctx.file.go_mod.path,
             "GO_SUM": go_sum_file.path,
-            "MODULE_PATH_FILE": module_path_file.path,
+            "MODULE_PATH": ctx.attr.importpath,
         },
         mnemonic = "GoModDirectory",
     )
@@ -154,6 +142,10 @@ def _go_mod_impl(ctx):
 go_mod = rule(
     implementation = _go_mod_impl,
     attrs = {
+        "importpath": attr.string(
+            mandatory = True,
+            doc = "The Go module import path (e.g., example.com/my/module)",
+        ),
         "go_mod": attr.label(
             mandatory = True,
             allow_single_file = [".mod"],

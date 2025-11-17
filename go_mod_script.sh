@@ -14,14 +14,7 @@ set -e
 : "${OUT_DIR:?OUT_DIR environment variable is required}"
 : "${GO_MOD:?GO_MOD environment variable is required}"
 : "${GO_SUM:?GO_SUM environment variable is required}"
-: "${MODULE_PATH_FILE:?MODULE_PATH_FILE environment variable is required}"
-
-# Read module path from file
-MODULE_PATH=$(cat "$MODULE_PATH_FILE" | tr -d '\r\n')
-if [ -z "$MODULE_PATH" ]; then
-    echo "ERROR: Could not read module path from $MODULE_PATH_FILE" >&2
-    exit 1
-fi
+: "${MODULE_PATH:?MODULE_PATH environment variable is required}"
 
 # Create output directory and module path subdirectory
 mkdir -p "$OUT_DIR/$MODULE_PATH"
