@@ -9,34 +9,61 @@ def _collect_srcs(srcs):
     return srcs
 
 def _go_mod_aspect_impl(target, ctx):
-    """Aspect to collect all transitive source files (.go, .h, .s/.asm, and go:embed files)."""
-    src_files = depset()
-    
-    # Collect source files from this target
+    """Aspect to collect all transitive source files (.go, .c, .h, .s/.asm, and go:embed files)."""
+    local_files = []
+    local_mappings = []
+
+    # Collect source files from this target and map them to its importpath.
     if GoInfo in target:
         go_info = target[GoInfo]
-        
-        # Collect .go source files (srcs is a list of File objects)
-        if hasattr(go_info, "srcs"):
-            src_files = depset(transitive = [src_files, depset(go_info.srcs)])
-        
-        # Collect CGO header files (.h) - check embedsrcs which may contain embedded files
-        if hasattr(go_info, "embedsrcs"):
-            src_files = depset(transitive = [src_files, _collect_srcs(go_info.embedsrcs)])
-    
-    # Collect from dependencies (aspect will be applied transitively)
+        importpath = getattr(go_info, "importpath", None)
+
+        if importpath:
+            # Collect .go source files
+            if hasattr(go_info, "srcs"):
+                for f in go_info.srcs:
+                    local_files.append(f)
+                    local_mappings.append(struct(file = f, importpath = importpath))
+
+            # Collect go:embed resource files if the Go toolchain exposes them.
+            if hasattr(go_info, "embedsrcs"):
+                for f in _collect_srcs(go_info.embedsrcs).to_list():
+                    local_files.append(f)
+                    local_mappings.append(struct(file = f, importpath = importpath))
+
+            # Collect any additional sources/data that are listed on the rule (e.g., .c/.h/.txt files).
+            if hasattr(ctx.rule, "files"):
+                if hasattr(ctx.rule.files, "srcs"):
+                    for f in ctx.rule.files.srcs:
+                        local_files.append(f)
+                        local_mappings.append(struct(file = f, importpath = importpath))
+                if hasattr(ctx.rule.files, "data"):
+                    for f in ctx.rule.files.data:
+                        local_files.append(f)
+                        local_mappings.append(struct(file = f, importpath = importpath))
+
+    # Collect transitive sources and mappings from dependencies and embedded libraries.
+    transitive_srcs = []
+    transitive_mappings = []
+
     if hasattr(ctx.rule.attr, "deps"):
         for dep in ctx.rule.attr.deps:
             if hasattr(dep, "go_mod_sources"):
-                src_files = depset(transitive = [src_files, dep.go_mod_sources])
-    
-    # Also collect embedded libraries
+                transitive_srcs.append(dep.go_mod_sources)
+            if hasattr(dep, "go_mod_mappings"):
+                transitive_mappings.extend(dep.go_mod_mappings)
+
     if hasattr(ctx.rule.attr, "embed"):
         for embed in ctx.rule.attr.embed:
             if hasattr(embed, "go_mod_sources"):
-                src_files = depset(transitive = [src_files, embed.go_mod_sources])
-    
-    return struct(go_mod_sources = src_files)
+                transitive_srcs.append(embed.go_mod_sources)
+            if hasattr(embed, "go_mod_mappings"):
+                transitive_mappings.extend(embed.go_mod_mappings)
+
+    return struct(
+        go_mod_sources = depset(local_files, transitive = transitive_srcs),
+        go_mod_mappings = local_mappings + transitive_mappings,
+    )
 
 _go_mod_aspect = aspect(
     implementation = _go_mod_aspect_impl,
@@ -51,15 +78,6 @@ def _go_mod_impl(ctx):
     for dep in ctx.attr.deps:
         if hasattr(dep, "go_mod_sources"):
             all_src_files = depset(transitive = [all_src_files, dep.go_mod_sources])
-        # Also collect direct source files from GoInfo (all file types)
-        if GoInfo in dep:
-            go_info = dep[GoInfo]
-            # Collect .go source files (srcs is a list of File objects)
-            if hasattr(go_info, "srcs"):
-                all_src_files = depset(transitive = [all_src_files, depset(go_info.srcs)])
-            # Collect go:embed files (embedsrcs)
-            if hasattr(go_info, "embedsrcs"):
-                all_src_files = depset(transitive = [all_src_files, _collect_srcs(go_info.embedsrcs)])
     
     # Create output directory
     output_dir = ctx.actions.declare_directory(ctx.attr.name)
@@ -76,29 +94,20 @@ def _go_mod_impl(ctx):
     # Collect all input files
     input_files = [ctx.file.go_mod, go_sum_file]
     
-    # Map files to their importpaths by tracking which GoInfo they come from
+    # Map files to their importpaths using mappings computed by the aspect.
     file_to_importpath = {}
     for dep in ctx.attr.deps:
-        if GoInfo in dep:
-            go_info = dep[GoInfo]
-            importpath = go_info.importpath
-            if hasattr(go_info, "srcs"):
-                for src_file in go_info.srcs:
-                    # Check if file is from external repository
-                    owner = src_file.owner
-                    if owner and owner.workspace_name:
-                        continue
-                    if src_file.short_path.startswith("external/"):
-                        continue
-                    file_to_importpath[src_file] = importpath
-            if hasattr(go_info, "embedsrcs"):
-                for embed_file in go_info.embedsrcs:
-                    owner = embed_file.owner
-                    if owner and owner.workspace_name:
-                        continue
-                    if embed_file.short_path.startswith("external/"):
-                        continue
-                    file_to_importpath[embed_file] = importpath
+        if hasattr(dep, "go_mod_mappings"):
+            for entry in dep.go_mod_mappings:
+                src_file = entry.file
+                importpath = entry.importpath
+                # Skip external repository files.
+                owner = src_file.owner
+                if owner and owner.workspace_name:
+                    continue
+                if src_file.short_path.startswith("external/"):
+                    continue
+                file_to_importpath[src_file] = importpath
     
     # Add all source files to inputs
     workspace_files_list = list(file_to_importpath.keys())
