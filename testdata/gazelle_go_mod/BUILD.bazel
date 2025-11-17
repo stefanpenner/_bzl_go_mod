@@ -1,5 +1,18 @@
 filegroup(
     name = "all_files",
-    srcs = glob(["**"]),
+    srcs = [
+        "BUILD.bazel",
+        "//testdata/gazelle_go_mod/mod1:BUILD.bazel",
+        "//testdata/gazelle_go_mod/mod1:go.mod",
+        "//testdata/gazelle_go_mod/mod1:root.go",
+        "//testdata/gazelle_go_mod/mod1/pkg1:BUILD.bazel",
+        "//testdata/gazelle_go_mod/mod1/pkg1:pkg1.go",
+        "//testdata/gazelle_go_mod/mod1/pkg2:BUILD.bazel",
+        "//testdata/gazelle_go_mod/mod1/pkg2:pkg2.go",
+        "//testdata/gazelle_go_mod/mod2:BUILD.bazel",
+        "//testdata/gazelle_go_mod/mod2:go.mod",
+        "//testdata/gazelle_go_mod/mod2/pkg3:BUILD.bazel",
+        "//testdata/gazelle_go_mod/mod2/pkg3:pkg3.go",
+    ],
     visibility = ["//visibility:public"],
 )

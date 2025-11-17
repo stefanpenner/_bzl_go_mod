@@ -1,5 +1,7 @@
 load("//:go_mod.bzl", "go_mod")
 
+exports_files(["BUILD.bazel", "go.mod"], visibility = ["//visibility:public"])
+
 go_mod(
     name = "go_mod",
     go_mod = ":go.mod",

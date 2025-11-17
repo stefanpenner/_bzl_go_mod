@@ -1,6 +1,8 @@
 load("@rules_go//go:def.bzl", "go_library")
 load("//:go_mod.bzl", "go_mod")
 
+exports_files(["BUILD.bazel", "go.mod", "root.go"], visibility = ["//visibility:public"])
+
 go_library(
     name = "mod1",
     srcs = ["root.go"],
