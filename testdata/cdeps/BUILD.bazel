@@ -10,6 +10,6 @@ go_library(
         "foo.c",
         "foo.h",
     ],
-    importpath = "github.com/stefanpenner/bazel_go_mod/testdata/cdeps",
+    importpath = "github.com/stefanpenner/bazel_go_mod/cdeps",
     visibility = ["//visibility:public"],
 )

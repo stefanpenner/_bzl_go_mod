@@ -3,8 +3,12 @@ load("@rules_go//go:def.bzl", "go_binary", "go_library")
 go_library(
     name = "app_lib",
     srcs = ["main.go"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/testdata/cmd/app",
+    importpath = "github.com/stefanpenner/bazel_go_mod/cmd/app",
     visibility = ["//visibility:public"],
+    deps = [
+        "//testdata/models:models",
+        "//testdata/utils:utils",
+    ],
 )
 
 go_binary(
