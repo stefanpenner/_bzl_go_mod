@@ -1,0 +1,4 @@
+load("@gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/stefanpenner/bazel_go_mod
+gazelle(name = "gazelle")
