@@ -1,3 +1,4 @@
+# gazelle:prefix github.com/stefanpenner/bazel_go_mod
 load("//rules/go_mod:go_mod.bzl", "go_mod")
 
 exports_files(
