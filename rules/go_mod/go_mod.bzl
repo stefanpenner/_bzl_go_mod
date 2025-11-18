@@ -20,7 +20,8 @@ def _go_mod_aspect_impl(target, ctx):
         if importpath:
             # Collect .go source files
             if hasattr(go_info, "srcs"):
-                for f in go_info.srcs:
+                srcs_depset = _collect_srcs(go_info.srcs)
+                for f in srcs_depset.to_list():
                     local_mappings.append(struct(file = f, importpath = importpath))
 
             # Collect go:embed resource files if the Go toolchain exposes them.
@@ -31,23 +32,33 @@ def _go_mod_aspect_impl(target, ctx):
             # Collect any additional sources/data that are listed on the rule (e.g., .txt files).
             if hasattr(ctx.rule, "files"):
                 if hasattr(ctx.rule.files, "srcs"):
-                    for f in ctx.rule.files.srcs:
+                    srcs_files = _collect_srcs(ctx.rule.files.srcs)
+                    for f in srcs_files.to_list():
                         local_mappings.append(struct(file = f, importpath = importpath))
                 if hasattr(ctx.rule.files, "data"):
-                    for f in ctx.rule.files.data:
+                    data_files = _collect_srcs(ctx.rule.files.data)
+                    for f in data_files.to_list():
                         local_mappings.append(struct(file = f, importpath = importpath))
 
-    # Collect transitive mappings from dependencies and embedded libraries.
-    transitive_mappings = []
+    # Collect transitive mappings from dependencies and embedded libraries using depsets.
+    transitive_mappings_depsets = []
     for attr_name in ["deps", "embed"]:
         if hasattr(ctx.rule.attr, attr_name):
             for dep in getattr(ctx.rule.attr, attr_name):
                 if hasattr(dep, "go_mod_mappings"):
-                    transitive_mappings.extend(dep.go_mod_mappings)
+                    # go_mod_mappings is a depset, collect it for transitive merging
+                    transitive_mappings_depsets.append(dep.go_mod_mappings)
 
-    return struct(
-        go_mod_mappings = local_mappings + transitive_mappings,
-    )
+    # Create depset from local mappings and merge with transitive depsets
+    local_mappings_depset = depset(local_mappings)
+    if transitive_mappings_depsets:
+        return struct(
+            go_mod_mappings = depset(transitive = [local_mappings_depset] + transitive_mappings_depsets),
+        )
+    else:
+        return struct(
+            go_mod_mappings = local_mappings_depset,
+        )
 
 _go_mod_aspect = aspect(
     implementation = _go_mod_aspect_impl,
@@ -73,23 +84,34 @@ def _go_mod_impl(ctx):
     input_files = [ctx.file.go_mod, go_sum_file]
     
     # Map files to their importpaths using mappings computed by the aspect.
+    # Collect all mappings from deps using depsets to avoid compilation dependencies
+    all_mappings_depsets = []
+    workspace_files_depsets = []
     file_to_importpath = {}
+    
     for dep in ctx.attr.deps:
         if hasattr(dep, "go_mod_mappings"):
-            for entry in dep.go_mod_mappings:
-                src_file = entry.file
-                importpath = entry.importpath
-                # Skip external repository files.
-                owner = src_file.owner
-                if owner and owner.workspace_name:
-                    continue
-                if src_file.short_path.startswith("external/"):
-                    continue
-                file_to_importpath[src_file] = importpath
+            all_mappings_depsets.append(dep.go_mod_mappings)
     
-    # Add all source files to inputs
-    workspace_files_list = list(file_to_importpath.keys())
-    all_input_files = depset(input_files + workspace_files_list)
+    # Merge all mappings depsets and process them
+    if all_mappings_depsets:
+        merged_mappings = depset(transitive = all_mappings_depsets)
+        for entry in merged_mappings.to_list():
+            src_file = entry.file
+            importpath = entry.importpath
+            # Skip external repository files.
+            owner = src_file.owner
+            if owner and owner.workspace_name:
+                continue
+            if src_file.short_path.startswith("external/"):
+                continue
+            file_to_importpath[src_file] = importpath
+        
+        # Create depset of workspace files
+        workspace_files_depsets = [depset(list(file_to_importpath.keys()))]
+    
+    # Add all source files to inputs using depset
+    all_input_files = depset(input_files, transitive = workspace_files_depsets)
     
     # Use the external script file
     script_file = ctx.file._script
