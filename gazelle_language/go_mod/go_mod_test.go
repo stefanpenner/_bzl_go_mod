@@ -99,7 +99,7 @@ go_library(name = "lib3")
 		}
 	}
 
-	got := collectGoLibraries(f, nil, "")
+	got := collectGoLibraries(f, nil, "", "")
 	// In unit tests, ShouldKeep() returns false for all rules, so we get nil/empty result
 	// But we verify the code structure is correct and doesn't panic
 	_ = got // Verify function executes without error

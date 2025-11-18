@@ -96,10 +96,11 @@ assert_file_does_not_contain 'go_mod(' "$TEST_TMPDIR/workspace/mod1/pkg1/BUILD.b
 assert_file_does_not_contain 'go_mod(' "$TEST_TMPDIR/workspace/mod1/pkg2/BUILD.bazel"
 assert_file_does_not_contain 'go_mod(' "$TEST_TMPDIR/workspace/mod2/pkg3/BUILD.bazel"
 
+cat "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
 # there should be deps in mod1/BUILD.bazel's go_mod
-assert_file_contains ':mod1' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
-assert_file_contains '//pkg1' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
-assert_file_contains '//pkg2' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
+assert_file_contains '//mod1' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
+assert_file_contains '//mod1/pkg1' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
+assert_file_contains '//mod1/pkg2' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
 
 # there should be deps in mod2/BUILD.bazel's go_mod
-assert_file_contains '//pkg3' "$TEST_TMPDIR/workspace/mod2/BUILD.bazel"
+assert_file_contains '//mod2/pkg3' "$TEST_TMPDIR/workspace/mod2/BUILD.bazel"
