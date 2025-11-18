@@ -22,12 +22,16 @@ import (
 // for generating a single go_mod rule for each Bazel package that contains a
 // go.mod file. It only considers go_library targets, never go_binary.
 type goModLanguage struct {
-	go_library_targets []string
+	go_library_targets_by_go_mod_dir map[string][]string
 }
 
 // NewLanguage is the constructor that Gazelle looks for when loading this extension.
 func NewLanguage() language.Language {
-	return &goModLanguage{}
+	return &goModLanguage{
+		// Track go_library targets per go.mod dir, since aggregation happens at the go_mod, not package, level.
+		// This is more complicated than pkg_tar and protos gazelle language extension, so we need to do more book keeping
+		go_library_targets_by_go_mod_dir: make(map[string][]string),
+	}
 }
 
 func (*goModLanguage) Name() string {
@@ -59,32 +63,67 @@ func (*goModLanguage) Loads() []rule.LoadInfo {
 
 func (*goModLanguage) Fix(*config.Config, *rule.File) {}
 
-func (*goModLanguage) Configure(*config.Config, string, *rule.File) {}
+func (*goModLanguage) Configure(config *config.Config, rel string, file *rule.File) {
+
+}
 
 func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.GenerateResult {
-	fmt.Printf("GenerateRules %s, rel: %s\n", args.Dir, args.Rel)
+	fmt.Printf("\n\nGenerateRules dir: %s, rel: %s\n", args.Dir, args.Rel)
 	res := language.GenerateResult{}
 
-	l.go_library_targets = append(l.go_library_targets, collectGoLibraries(args.File, args.OtherGen, args.Rel)...)
+	repoRoot := args.Config.RepoRoot
 
-	if !slices.Contains(args.RegularFiles, "go.mod") {
+	// let's check if we are in a go_mod directory
+	isGoModDir := slices.Contains(args.RegularFiles, "go.mod")
+
+	fmt.Printf("- isGoModDir: %t\n", isGoModDir)
+	fmt.Printf("- repoRoot: %s\n", repoRoot)
+	fmt.Printf("- args.Dir: %s\n", args.Dir)
+
+	var goModDir string
+	var err error
+	if isGoModDir {
+		goModDir = repoRoot + "/" + args.Dir
+	} else {
+		// if we aren't in a go_mod directory, we need to find the closest go.mod file between the current directory and the repo root
+		goModDir, err = findGoModDirBetween(args.Dir, repoRoot)
+		fmt.Printf("- findGoModDirBetween: %s and %s == %s\n", args.Dir, repoRoot, goModDir)
+
+		if err != nil {
+			fmt.Printf("Error finding go.mod between %s and %s: %v\n", args.Dir, repoRoot, err)
+			return res
+		}
+
+		if goModDir == "" {
+			fmt.Printf("No go.mod found between %s and %s\n", args.Dir, repoRoot)
+			return res
+		}
+	}
+
+	// always populate library collecting for the go_mod directory
+	go_library_targets := collectGoLibraries(args.File, args.OtherGen, args.Rel)
+
+	// insert the go_libraries into the appropriate go_mod directory slot
+	if l.go_library_targets_by_go_mod_dir[goModDir] == nil {
+		l.go_library_targets_by_go_mod_dir[goModDir] = make([]string, 0)
+	}
+
+	l.go_library_targets_by_go_mod_dir[goModDir] = append(l.go_library_targets_by_go_mod_dir[goModDir], go_library_targets...)
+
+	fmt.Printf("- go_library_targets_by_go_mod_dir: key: %s targets: %v\n", goModDir, l.go_library_targets_by_go_mod_dir[goModDir])
+	// if we aren't in a go_mod directory, we don't need to generate a go_mod rule, so we exit early
+	if !isGoModDir {
+		fmt.Printf("- not in a go_mod directory, so we exit early\n")
 		return res
 	}
-	// capture the existing visited go_libraries
-	// and reset the list, as now we have what we need for the current go_mod rule
-	go_library_targets := slices.Clone(l.go_library_targets)
-	slices.Sort(go_library_targets)
-	go_library_targets = slices.Compact(go_library_targets)
+	fmt.Printf("- we are in a go_mod directory, so we continue\n")
 
-	// reset the list, as now we have what we need for the next go_mod rule
-	l.go_library_targets = make([]string, 0)
-
-	fmt.Printf("go_library_targets: %v dir: %s\n", go_library_targets, args.Dir)
 	modulePath, err := parseModulePath(filepath.Join(args.Dir, "go.mod"))
 	if err != nil {
 		return res
 	}
 
+	fmt.Printf(" - generating go_mod rule for: %s\n", goModDir)
 	var r *rule.Rule
 	for _, existingRule := range args.File.Rules {
 		if existingRule.Kind() == "go_mod" {
@@ -103,7 +142,7 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 	if slices.Contains(args.RegularFiles, "go.sum") {
 		r.SetAttr("go_sum", ":go.sum")
 	}
-	r.SetAttr("deps", go_library_targets)
+	r.SetAttr("deps", l.go_library_targets_by_go_mod_dir[goModDir])
 
 	res.Gen = append(res.Gen, r)
 	res.Imports = make([]interface{}, len(res.Gen))
@@ -198,4 +237,54 @@ func collectGoLibraries(f *rule.File, otherGen []*rule.Rule, rel string) []strin
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// findGoModBetween finds the go.mod file between currentDir and repoRoot.
+// It walks up from currentDir towards repoRoot and returns the first go.mod found.
+// Returns an error if currentDir is not equal to or a descendant of repoRoot.
+func findGoModDirBetween(currentDir, repoRoot string) (string, error) {
+	// Normalize paths to handle symlinks and relative paths
+	currentDirAbs, err := filepath.Abs(currentDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve currentDir: %w", err)
+	}
+	repoRootAbs, err := filepath.Abs(repoRoot)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve repoRoot: %w", err)
+	}
+
+	// Check if currentDir is equal to or a descendant of repoRoot
+	rel, err := filepath.Rel(repoRootAbs, currentDirAbs)
+	if err != nil {
+		return "", fmt.Errorf("currentDir %q is not relative to repoRoot %q: %w", currentDirAbs, repoRootAbs, err)
+	}
+
+	// If rel starts with "..", currentDir is not a descendant of repoRoot
+	if strings.HasPrefix(rel, "..") {
+		return "", fmt.Errorf("currentDir %q is not equal to or a descendant of repoRoot %q", currentDirAbs, repoRootAbs)
+	}
+
+	// Walk up from currentDir towards repoRoot looking for go.mod
+	dir := currentDirAbs
+	for {
+		goModPath := filepath.Join(dir, "go.mod")
+		if fileExists(goModPath) {
+			return filepath.Dir(goModPath), nil
+		}
+
+		// Stop if we've reached repoRoot
+		if dir == repoRootAbs {
+			break
+		}
+
+		// Move up one directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached filesystem root without finding go.mod
+			break
+		}
+		dir = parent
+	}
+
+	return "", fmt.Errorf("go.mod not found between %q and %q", currentDirAbs, repoRootAbs)
 }

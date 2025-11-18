@@ -1,3 +1,5 @@
+load("//rules/go_mod:go_mod.bzl", "go_mod")
+
 exports_files(
     [
         "BUILD.bazel",
@@ -5,4 +7,12 @@ exports_files(
         "go.sum",
     ],
     visibility = ["//visibility:public"],
+)
+
+go_mod(
+    name = "go_mod_dir",
+    go_mod = ":go.mod",
+    go_sum = ":go.sum",
+    module_path = "github.com/stefanpenner/bazel_go_mod",
+    deps = [],
 )

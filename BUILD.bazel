@@ -1,4 +1,5 @@
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
+load("//rules/go_mod:go_mod.bzl", "go_mod")
 
 gazelle_binary(
     name = "gazelle_with_go_mod",
@@ -13,4 +14,12 @@ gazelle_binary(
 gazelle(
     name = "gazelle",
     gazelle = ":gazelle_with_go_mod",
+)
+
+go_mod(
+    name = "go_mod_dir",
+    go_mod = ":go.mod",
+    go_sum = ":go.sum",
+    module_path = "github.com/stefanpenner/bazel_go_mod",
+    deps = [],
 )
