@@ -144,7 +144,7 @@ go_mod = rule(
             doc = "List of Go library or deps targets to include in the module",
         ),
         "_script": attr.label(
-            default = "//rules/go_mod:go_mod_script.sh",
+            default = "@bazel_go_mod//rules/go_mod:go_mod_script.sh",
             allow_single_file = True,
             doc = "The shell script to copy files",
         ),
