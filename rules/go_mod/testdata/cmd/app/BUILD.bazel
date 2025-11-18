@@ -6,7 +6,7 @@ load("@rules_go//go:def.bzl", "go_binary", "go_library")
 go_library(
     name = "app_lib",
     srcs = ["main.go"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/cmd/app",
+    importpath = "github.com/stefanpenner/bazel_go_mod/cmd/app",  # keep
     visibility = ["//visibility:public"],
     deps = [
         "//rules/go_mod/testdata/models",
