@@ -35,19 +35,16 @@ Which produces:
 ```sh
 tree  bazel-bin/rules/go_mod/testdata/go_mod_dir
 bazel-bin/rules/go_mod/testdata/go_mod_dir
-└── rules
-    └── go_mod
-        └── testdata
-            ├── go.mod
-            ├── go.sum
-            ├── cmd
-            │   └── app
-            │       └── main.go
-            ├── embedfs
-            │   ├── data.txt
-            │   └── embedfs.go
-            ├── models
-            │   └── user.go
-            └── utils
-                └── utils.go
+├── go.mod
+├── go.sum
+├── cmd
+│   └── app
+│       └── main.go
+├── embedfs
+│   ├── data.txt
+│   └── embedfs.go
+├── models
+│   └── user.go
+└── utils
+    └── utils.go
 ```
