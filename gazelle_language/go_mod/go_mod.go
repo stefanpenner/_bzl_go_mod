@@ -97,9 +97,13 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 		return res
 	}
 
-	// Delete any existing go_mod rules
+	// Delete any existing go_mod rules and preserve visibility
+	var existingVisibility interface{}
 	for _, existingRule := range args.File.Rules {
 		if existingRule.Kind() == "go_mod" {
+			if existingVisibility == nil {
+				existingVisibility = existingRule.Attr("visibility")
+			}
 			existingRule.Delete()
 		}
 	}
@@ -112,6 +116,9 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 		r.SetAttr("go_sum", ":go.sum")
 	}
 	r.SetAttr("deps", l.go_library_targets_by_go_mod_dir[goModDir])
+	if existingVisibility != nil {
+		r.SetAttr("visibility", existingVisibility)
+	}
 
 	res.Gen = append(res.Gen, r)
 	res.Imports = make([]interface{}, len(res.Gen))
