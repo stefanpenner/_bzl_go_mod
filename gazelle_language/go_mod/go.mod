@@ -3,7 +3,7 @@ module github.com/stefanpenner/bazel_go_mod/gazelle_language/go_mod
 go 1.25
 
 require (
-	github.com/bazelbuild/bazel-gazelle v0.47.0
+	github.com/bazelbuild/bazel-gazelle v0.44.0
 	github.com/stretchr/testify v1.11.1
 )
 
