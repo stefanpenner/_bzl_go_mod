@@ -1,14 +1,17 @@
 load("@rules_go//go:def.bzl", "go_binary", "go_library")
 
+# gazelle:resolve go github.com/stefanpenner/bazel_go_mod/models //rules/go_mod/testdata/models:models
+# gazelle:resolve go github.com/stefanpenner/bazel_go_mod/utils //rules/go_mod/testdata/utils:utils
+
 go_library(
     name = "app_lib",
     srcs = ["main.go"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/cmd/app",
+    importpath = "github.com/stefanpenner/bazel_go_mod/rules/go_mod/testdata/cmd/app",
+    visibility = ["//visibility:public"],
     deps = [
         "//rules/go_mod/testdata/models",
         "//rules/go_mod/testdata/utils",
     ],
-    visibility = ["//visibility:public"],
 )
 
 go_binary(
@@ -24,4 +27,3 @@ exports_files(
     ],
     visibility = ["//visibility:public"],
 )
-

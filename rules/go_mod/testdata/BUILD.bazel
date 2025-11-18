@@ -1,20 +1,3 @@
-load("//rules/go_mod:go_mod.bzl", "go_mod")
-
-go_mod(
-    name = "testdata.go_mod",
-    go_mod = "//rules/go_mod/testdata:go.mod",
-    go_sum = "//rules/go_mod/testdata:go.sum",
-    module_path = "github.com/stefanpenner/bazel_go_mod",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//rules/go_mod/testdata/utils",
-        "//rules/go_mod/testdata/models",
-        "//rules/go_mod/testdata/cmd/app:app_lib",
-        "//rules/go_mod/testdata/embedfs",
-        "//rules/go_mod/testdata/cdeps",
-    ],
-)
-
 exports_files(
     [
         "BUILD.bazel",

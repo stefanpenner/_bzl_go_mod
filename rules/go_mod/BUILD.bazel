@@ -1,5 +1,11 @@
 # Make the script file available
-exports_files(["go_mod_script.sh", "go_mod_test.sh"])
+exports_files([
+    "go_mod_script.sh",
+    "go_mod_test.sh",
+])
+
+# gazelle:resolve go github.com/stefanpenner/bazel_go_mod/models //rules/go_mod/testdata/models:models
+# gazelle:resolve go github.com/stefanpenner/bazel_go_mod/utils //rules/go_mod/testdata/utils:utils
 
 # sh_test for go_mod rule
 sh_test(
@@ -8,4 +14,3 @@ sh_test(
     args = ["$(rootpath //rules/go_mod/testdata:testdata.go_mod)"],
     data = ["//rules/go_mod/testdata:testdata.go_mod"],
 )
-

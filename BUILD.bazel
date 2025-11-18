@@ -1,9 +1,5 @@
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
-load("//rules/go_mod:go_mod.bzl", "go_mod")
 
-# gazelle:exclude testdata/*.bazel
-# gazelle:exclude testdata/**/*
-#
 gazelle_binary(
     name = "gazelle_with_go_mod",
     languages = [
@@ -17,12 +13,4 @@ gazelle_binary(
 gazelle(
     name = "gazelle",
     gazelle = ":gazelle_with_go_mod",
-)
-
-go_mod(
-    name = "bazel_go_mod.go_mod",
-    go_mod = ":go.mod",
-    go_sum = ":go.sum",
-    module_path = "github.com/stefanpenner/bazel_go_mod",
-    deps = [],
 )

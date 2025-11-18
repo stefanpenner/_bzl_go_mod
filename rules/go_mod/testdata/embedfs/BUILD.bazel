@@ -4,7 +4,7 @@ go_library(
     name = "embedfs",
     srcs = ["embedfs.go"],
     embedsrcs = ["data.txt"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/embedfs",
+    importpath = "github.com/stefanpenner/bazel_go_mod/rules/go_mod/testdata/embedfs",
     visibility = ["//visibility:public"],
 )
 
@@ -16,4 +16,3 @@ exports_files(
     ],
     visibility = ["//visibility:public"],
 )
-

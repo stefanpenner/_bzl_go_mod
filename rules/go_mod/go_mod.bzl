@@ -28,7 +28,7 @@ def _go_mod_aspect_impl(target, ctx):
                 for f in _collect_srcs(go_info.embedsrcs).to_list():
                     local_mappings.append(struct(file = f, importpath = importpath))
 
-            # Collect any additional sources/data that are listed on the rule (e.g., .c/.h/.txt files).
+            # Collect any additional sources/data that are listed on the rule (e.g., .txt files).
             if hasattr(ctx.rule, "files"):
                 if hasattr(ctx.rule.files, "srcs"):
                     for f in ctx.rule.files.srcs:

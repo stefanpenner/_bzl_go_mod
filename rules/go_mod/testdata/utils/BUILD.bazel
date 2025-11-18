@@ -1,9 +1,9 @@
-load("@rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "utils",
     srcs = ["utils.go"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/utils",
+    importpath = "github.com/stefanpenner/bazel_go_mod/rules/go_mod/testdata/utils",
     visibility = ["//visibility:public"],
 )
 
@@ -16,3 +16,8 @@ exports_files(
     visibility = ["//visibility:public"],
 )
 
+go_test(
+    name = "utils_test",
+    srcs = ["utils_test.go"],
+    embed = [":utils"],
+)

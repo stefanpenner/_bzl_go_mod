@@ -9,10 +9,11 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 # gazelle:resolve go github.com/stretchr/testify/assert @com_github_stretchr_testify//assert
 # gazelle:resolve go github.com/stretchr/testify/require @com_github_stretchr_testify//require
 
+# gazelle:exclude testdata/**/*
 go_library(
     name = "go_mod",
     srcs = ["go_mod.go"],
-    importpath = "github.com/stefanpenner/bazel_go_mod/go_mod",
+    importpath = "github.com/stefanpenner/bazel_go_mod/gazelle_language/go_mod",
     visibility = ["//visibility:public"],
     deps = [
         "@gazelle//config",

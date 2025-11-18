@@ -99,7 +99,7 @@ go_library(name = "lib3")
 		}
 	}
 
-	got := collectGoLibraries(f, "")
+	got := collectGoLibraries(f, nil, "")
 	// In unit tests, ShouldKeep() returns false for all rules, so we get nil/empty result
 	// But we verify the code structure is correct and doesn't panic
 	_ = got // Verify function executes without error
@@ -133,10 +133,11 @@ go_library(name = "lib2")
 	r4.Delete()
 
 	args := language.GenerateArgs{
-		Dir:      dir,
-		Rel:      "",
-		File:     f,
-		OtherGen: []*rule.Rule{r3, r4},
+		Dir:          dir,
+		Rel:          "",
+		File:         f,
+		OtherGen:     []*rule.Rule{r3, r4},
+		RegularFiles: []string{"go.mod"},
 	}
 
 	result := (&goModLanguage{}).GenerateRules(args)
@@ -183,10 +184,11 @@ go_library(name = "lib2")
 	assert.False(t, r4.ShouldKeep(), "Deleted rule should have ShouldKeep() == false")
 
 	args := language.GenerateArgs{
-		Dir:      dir,
-		Rel:      "",
-		File:     f,
-		OtherGen: []*rule.Rule{r3, r4},
+		Dir:          dir,
+		Rel:          "",
+		File:         f,
+		OtherGen:     []*rule.Rule{r3, r4},
+		RegularFiles: []string{"go.mod"},
 	}
 
 	result := (&goModLanguage{}).GenerateRules(args)
