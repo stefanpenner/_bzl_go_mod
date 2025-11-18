@@ -14,6 +14,7 @@ go_mod(
     go_mod = ":go.mod",
     go_sum = ":go.sum",
     module_path = "github.com/stefanpenner/bazel_go_mod",
+    visibility = ["//rules/go_mod:__pkg__"],
     deps = [
         "//rules/go_mod/testdata/cmd/app:app_lib",
         "//rules/go_mod/testdata/embedfs",

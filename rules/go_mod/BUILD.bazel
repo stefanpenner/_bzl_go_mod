@@ -11,6 +11,6 @@ exports_files([
 sh_test(
     name = "go_mod_test",
     srcs = [":go_mod_test.sh"],
-    args = ["$(rootpath //rules/go_mod/testdata:testdata.go_mod)"],
-    data = ["//rules/go_mod/testdata:testdata.go_mod"],
+    args = ["$(rootpath //rules/go_mod/testdata:go_mod_dir)"],
+    data = ["//rules/go_mod/testdata:go_mod_dir"],
 )
