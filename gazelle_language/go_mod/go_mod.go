@@ -68,72 +68,44 @@ func (*goModLanguage) Configure(config *config.Config, rel string, file *rule.Fi
 }
 
 func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.GenerateResult {
-	fmt.Printf("\n\nGenerateRules dir: %s, rel: %s\n", args.Dir, args.Rel)
 	res := language.GenerateResult{}
 
-	repoRoot := args.Config.RepoRoot
-
-	// let's check if we are in a go_mod directory
 	isGoModDir := slices.Contains(args.RegularFiles, "go.mod")
 
-	fmt.Printf("- isGoModDir: %t\n", isGoModDir)
-	fmt.Printf("- repoRoot: %s\n", repoRoot)
-	fmt.Printf("- args.Dir: %s\n", args.Dir)
-
 	var goModDir string
-	var err error
 	if isGoModDir {
 		goModDir = args.Dir
 	} else {
-		// if we aren't in a go_mod directory, we need to find the closest go.mod file between the current directory and the repo root
-		goModDir, err = findGoModDirBetween(args.Dir, repoRoot)
-		fmt.Printf("- findGoModDirBetween: %s and %s == %s\n", args.Dir, repoRoot, goModDir)
-
+		var err error
+		goModDir, err = findGoModDirBetween(args.Dir, args.Config.RepoRoot)
 		if err != nil {
-			fmt.Printf("Error finding go.mod between %s and %s: %v\n", args.Dir, repoRoot, err)
-			return res
-		}
-
-		if goModDir == "" {
-			fmt.Printf("No go.mod found between %s and %s\n", args.Dir, repoRoot)
 			return res
 		}
 	}
 
-	// always populate library collecting for the go_mod directory
+	// Collect go_library targets for this go_mod directory
 	go_library_targets := collectGoLibraries(args.File, args.OtherGen, args.Rel)
-
-	// insert the go_libraries into the appropriate go_mod directory slot
-	if l.go_library_targets_by_go_mod_dir[goModDir] == nil {
-		l.go_library_targets_by_go_mod_dir[goModDir] = make([]string, 0)
-	}
-
 	l.go_library_targets_by_go_mod_dir[goModDir] = append(l.go_library_targets_by_go_mod_dir[goModDir], go_library_targets...)
 
-	fmt.Printf("- go_library_targets_by_go_mod_dir: key: %s targets: %v\n", goModDir, l.go_library_targets_by_go_mod_dir[goModDir])
-	// if we aren't in a go_mod directory, we don't need to generate a go_mod rule, so we exit early
+	// Only generate rule if we're in a go_mod directory
 	if !isGoModDir {
-		fmt.Printf("- not in a go_mod directory, so we exit early\n")
 		return res
 	}
-	fmt.Printf("- we are in a go_mod directory, so we continue\n")
 
 	modulePath, err := parseModulePath(filepath.Join(args.Dir, "go.mod"))
 	if err != nil {
 		return res
 	}
 
-	fmt.Printf(" - generating go_mod rule for: %s\n", goModDir)
-	// Delete any existing go_mod rules first
+	// Delete any existing go_mod rules
 	for _, existingRule := range args.File.Rules {
 		if existingRule.Kind() == "go_mod" {
 			existingRule.Delete()
 		}
 	}
 
-	// Always create a new rule
+	// Create new go_mod rule
 	r := rule.NewRule("go_mod", "go_mod_dir")
-	// always create a new rule, just preserve the tags and visibility from the existing rule
 	r.SetAttr("module_path", modulePath)
 	r.SetAttr("go_mod", ":go.mod")
 	if slices.Contains(args.RegularFiles, "go.sum") {
@@ -143,7 +115,6 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 
 	res.Gen = append(res.Gen, r)
 	res.Imports = make([]interface{}, len(res.Gen))
-	fmt.Printf(" - added rule to res.Gen, total rules: %d\n", len(res.Gen))
 	return res
 }
 
@@ -151,7 +122,7 @@ func (*goModLanguage) Imports(*config.Config, *rule.Rule, *rule.File) []resolve.
 	return nil
 }
 
-func (*goModLanguage) Embeds(r *rule.Rule, from label.Label) []label.Label {
+func (*goModLanguage) Embeds(*rule.Rule, label.Label) []label.Label {
 	return nil
 }
 
