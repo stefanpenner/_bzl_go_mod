@@ -8,3 +8,4 @@ sh_test(
     args = ["$(rootpath //rules/go_mod/testdata:testdata.go_mod)"],
     data = ["//rules/go_mod/testdata:testdata.go_mod"],
 )
+

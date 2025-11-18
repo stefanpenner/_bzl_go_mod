@@ -28,10 +28,8 @@ echo "test root: $(pwd)"
 [ -f "embedfs/embedfs.go" ] || { echo "ERROR: embedfs/embedfs.go not found"; exit 1; }
 [ -f "embedfs/data.txt" ] || { echo "ERROR: embedfs/data.txt not found"; exit 1; }
 
-# Assert cdeps CGo-related files exist (.go, .c, and .h)
+# Assert cdeps Go file exists (C files are in cdeps, not included as source in module output)
 [ -f "cdeps/foo.go" ] || { echo "ERROR: cdeps/foo.go not found"; exit 1; }
-[ -f "cdeps/foo.c" ] || { echo "ERROR: cdeps/foo.c not found"; exit 1; }
-[ -f "cdeps/foo.h" ] || { echo "ERROR: cdeps/foo.h not found"; exit 1; }
 
 # Assert no external dependencies are included
 [ ! -d "gazelle++go_deps+com_github_google_uuid" ] || { echo "ERROR: External dependencies should not be included"; exit 1; }

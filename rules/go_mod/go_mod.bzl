@@ -9,8 +9,7 @@ def _collect_srcs(srcs):
     return srcs
 
 def _go_mod_aspect_impl(target, ctx):
-    """Aspect to collect all transitive source files (.go, .c, .h, .s/.asm, and go:embed files)."""
-    local_files = []
+    """Aspect to collect all transitive source files mapped to their importpaths."""
     local_mappings = []
 
     # Collect source files from this target and map them to its importpath.
@@ -22,46 +21,31 @@ def _go_mod_aspect_impl(target, ctx):
             # Collect .go source files
             if hasattr(go_info, "srcs"):
                 for f in go_info.srcs:
-                    local_files.append(f)
                     local_mappings.append(struct(file = f, importpath = importpath))
 
             # Collect go:embed resource files if the Go toolchain exposes them.
             if hasattr(go_info, "embedsrcs"):
                 for f in _collect_srcs(go_info.embedsrcs).to_list():
-                    local_files.append(f)
                     local_mappings.append(struct(file = f, importpath = importpath))
 
             # Collect any additional sources/data that are listed on the rule (e.g., .c/.h/.txt files).
             if hasattr(ctx.rule, "files"):
                 if hasattr(ctx.rule.files, "srcs"):
                     for f in ctx.rule.files.srcs:
-                        local_files.append(f)
                         local_mappings.append(struct(file = f, importpath = importpath))
                 if hasattr(ctx.rule.files, "data"):
                     for f in ctx.rule.files.data:
-                        local_files.append(f)
                         local_mappings.append(struct(file = f, importpath = importpath))
 
-    # Collect transitive sources and mappings from dependencies and embedded libraries.
-    transitive_srcs = []
+    # Collect transitive mappings from dependencies and embedded libraries.
     transitive_mappings = []
-
-    if hasattr(ctx.rule.attr, "deps"):
-        for dep in ctx.rule.attr.deps:
-            if hasattr(dep, "go_mod_sources"):
-                transitive_srcs.append(dep.go_mod_sources)
-            if hasattr(dep, "go_mod_mappings"):
-                transitive_mappings.extend(dep.go_mod_mappings)
-
-    if hasattr(ctx.rule.attr, "embed"):
-        for embed in ctx.rule.attr.embed:
-            if hasattr(embed, "go_mod_sources"):
-                transitive_srcs.append(embed.go_mod_sources)
-            if hasattr(embed, "go_mod_mappings"):
-                transitive_mappings.extend(embed.go_mod_mappings)
+    for attr_name in ["deps", "embed"]:
+        if hasattr(ctx.rule.attr, attr_name):
+            for dep in getattr(ctx.rule.attr, attr_name):
+                if hasattr(dep, "go_mod_mappings"):
+                    transitive_mappings.extend(dep.go_mod_mappings)
 
     return struct(
-        go_mod_sources = depset(local_files, transitive = transitive_srcs),
         go_mod_mappings = local_mappings + transitive_mappings,
     )
 
@@ -72,12 +56,6 @@ _go_mod_aspect = aspect(
 
 def _go_mod_impl(ctx):
     """Implementation of the go_mod rule."""
-    
-    # Collect all transitive source files using the aspect
-    all_src_files = depset()
-    for dep in ctx.attr.deps:
-        if hasattr(dep, "go_mod_sources"):
-            all_src_files = depset(transitive = [all_src_files, dep.go_mod_sources])
     
     # Create output directory
     output_dir = ctx.actions.declare_directory(ctx.attr.name)
@@ -111,7 +89,7 @@ def _go_mod_impl(ctx):
     
     # Add all source files to inputs
     workspace_files_list = list(file_to_importpath.keys())
-    all_input_files = depset(input_files + workspace_files_list, transitive = [all_src_files])
+    all_input_files = depset(input_files + workspace_files_list)
     
     # Use the external script file
     script_file = ctx.file._script
@@ -141,10 +119,6 @@ def _go_mod_impl(ctx):
     return [
         DefaultInfo(
             files = depset([output_dir]),
-            runfiles = ctx.runfiles(
-                files = [output_dir],
-                transitive_files = all_src_files,
-            ),
         ),
     ]
 

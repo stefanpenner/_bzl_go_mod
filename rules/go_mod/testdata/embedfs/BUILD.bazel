@@ -3,7 +3,7 @@ load("@rules_go//go:def.bzl", "go_library")
 go_library(
     name = "embedfs",
     srcs = ["embedfs.go"],
-    data = ["data.txt"],
+    embedsrcs = ["data.txt"],
     importpath = "github.com/stefanpenner/bazel_go_mod/embedfs",
     visibility = ["//visibility:public"],
 )

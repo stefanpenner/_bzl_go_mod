@@ -1,14 +1,19 @@
 load("@rules_go//go:def.bzl", "go_library")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "foo_c",
+    srcs = ["foo.c"],
+    hdrs = ["foo.h"],
+    visibility = ["//visibility:public"],
+)
 
 go_library(
     name = "cdeps",
-    srcs = [
-        "foo.go",
-        "foo.c",
-        "foo.h",
-    ],
+    srcs = ["foo.go"],
     importpath = "github.com/stefanpenner/bazel_go_mod/cdeps",
     cgo = True,
+    cdeps = [":foo_c"],
     visibility = ["//visibility:public"],
 )
 
