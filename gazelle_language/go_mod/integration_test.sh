@@ -58,8 +58,11 @@ cd "${TEST_TMPDIR}/workspace"
 
 assert_file_exists "${TEST_TMPDIR}/workspace/mod1/go.mod"
 assert_file_exists "${TEST_TMPDIR}/workspace/mod2/go.mod"
+assert_file_exists "${TEST_TMPDIR}/workspace/mod3/go.mod"
+assert_file_exists "${TEST_TMPDIR}/workspace/mod3/go.sum"
 assert_file_exists "${TEST_TMPDIR}/workspace/mod1/BUILD.bazel"
 assert_file_exists "${TEST_TMPDIR}/workspace/mod2/BUILD.bazel"
+assert_file_exists "${TEST_TMPDIR}/workspace/mod3/BUILD.bazel"
 
 # now let's assert the BUILD.bazel files are correct, and have not yet had gazelle run on them
 # no go_library yet
@@ -90,17 +93,21 @@ assert_file_contains 'go_library(' "$TEST_TMPDIR/workspace/mod2/pkg3/BUILD.bazel
 # there should be go_mod's
 assert_file_contains 'go_mod(' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
 assert_file_contains 'go_mod(' "$TEST_TMPDIR/workspace/mod2/BUILD.bazel"
+assert_file_contains 'go_mod(' "$TEST_TMPDIR/workspace/mod3/BUILD.bazel"
 
 # there should be no go_mods
 assert_file_does_not_contain 'go_mod(' "$TEST_TMPDIR/workspace/mod1/pkg1/BUILD.bazel"
 assert_file_does_not_contain 'go_mod(' "$TEST_TMPDIR/workspace/mod1/pkg2/BUILD.bazel"
 assert_file_does_not_contain 'go_mod(' "$TEST_TMPDIR/workspace/mod2/pkg3/BUILD.bazel"
 
-cat "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
 # there should be deps in mod1/BUILD.bazel's go_mod
-assert_file_contains '//mod1' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
+assert_file_contains ':mod1' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
 assert_file_contains '//mod1/pkg1' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
 assert_file_contains '//mod1/pkg2' "$TEST_TMPDIR/workspace/mod1/BUILD.bazel"
 
 # there should be deps in mod2/BUILD.bazel's go_mod
 assert_file_contains '//mod2/pkg3' "$TEST_TMPDIR/workspace/mod2/BUILD.bazel"
+
+# mod3: root-only module with go.sum
+assert_file_contains ':mod3' "$TEST_TMPDIR/workspace/mod3/BUILD.bazel"
+assert_file_contains 'go_sum' "$TEST_TMPDIR/workspace/mod3/BUILD.bazel"

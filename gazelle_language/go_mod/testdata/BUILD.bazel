@@ -13,6 +13,10 @@ filegroup(
         "//gazelle_language/go_mod/testdata/mod2:go.mod",
         "//gazelle_language/go_mod/testdata/mod2/pkg3:BUILD.bazel",
         "//gazelle_language/go_mod/testdata/mod2/pkg3:pkg3.go",
+        "//gazelle_language/go_mod/testdata/mod3:BUILD.bazel",
+        "//gazelle_language/go_mod/testdata/mod3:go.mod",
+        "//gazelle_language/go_mod/testdata/mod3:go.sum",
+        "//gazelle_language/go_mod/testdata/mod3:root.go",
     ],
     visibility = ["//visibility:public"],
 )

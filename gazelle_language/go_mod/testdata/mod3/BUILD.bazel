@@ -1,0 +1,10 @@
+exports_files(
+    [
+        "BUILD.bazel",
+        "go.mod",
+        "go.sum",
+        "root.go",
+    ],
+    visibility = ["//visibility:public"],
+)
+
