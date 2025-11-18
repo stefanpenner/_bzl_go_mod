@@ -1,0 +1,6 @@
+go 1.25
+
+use (
+	./gazelle_language/go_mod
+	./rules/go_mod/testdata
+)
