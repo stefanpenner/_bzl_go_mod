@@ -14,5 +14,10 @@ go_mod(
     go_mod = ":go.mod",
     go_sum = ":go.sum",
     module_path = "github.com/stefanpenner/bazel_go_mod",
-    deps = [],
+    deps = [
+        "//rules/go_mod/testdata/cmd/app:app_lib",
+        "//rules/go_mod/testdata/embedfs",
+        "//rules/go_mod/testdata/models",
+        "//rules/go_mod/testdata/utils",
+    ],
 )

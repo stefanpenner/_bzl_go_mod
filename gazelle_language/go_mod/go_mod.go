@@ -83,7 +83,7 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 	var goModDir string
 	var err error
 	if isGoModDir {
-		goModDir = repoRoot + "/" + args.Dir
+		goModDir = args.Dir
 	} else {
 		// if we aren't in a go_mod directory, we need to find the closest go.mod file between the current directory and the repo root
 		goModDir, err = findGoModDirBetween(args.Dir, repoRoot)
@@ -124,18 +124,15 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 	}
 
 	fmt.Printf(" - generating go_mod rule for: %s\n", goModDir)
-	var r *rule.Rule
+	// Delete any existing go_mod rules first
 	for _, existingRule := range args.File.Rules {
 		if existingRule.Kind() == "go_mod" {
 			existingRule.Delete()
-			r = existingRule
-			break
 		}
 	}
 
-	if r == nil {
-		r = rule.NewRule("go_mod", "go_mod_dir")
-	}
+	// Always create a new rule
+	r := rule.NewRule("go_mod", "go_mod_dir")
 	// always create a new rule, just preserve the tags and visibility from the existing rule
 	r.SetAttr("module_path", modulePath)
 	r.SetAttr("go_mod", ":go.mod")
@@ -146,6 +143,7 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 
 	res.Gen = append(res.Gen, r)
 	res.Imports = make([]interface{}, len(res.Gen))
+	fmt.Printf(" - added rule to res.Gen, total rules: %d\n", len(res.Gen))
 	return res
 }
 
