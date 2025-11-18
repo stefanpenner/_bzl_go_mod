@@ -1,4 +1,5 @@
 load("@rules_go//go:def.bzl", "go_library", "go_test")
+load("//rules/go_mod:go_mod.bzl", "go_mod")
 
 # gazelle:resolve go github.com/bazelbuild/bazel-gazelle/config @gazelle//config:config
 # gazelle:resolve go github.com/bazelbuild/bazel-gazelle/label @gazelle//label:label
@@ -38,7 +39,11 @@ go_test(
 )
 
 # Make the integration test script available
-exports_files(["integration_test.sh"])
+exports_files([
+    "integration_test.sh",
+    "go.mod",
+    "go.sum",
+])
 
 sh_test(
     name = "integration_test",
@@ -50,4 +55,12 @@ sh_test(
     env = {
         "GAZELLE_BIN": "$(location //:gazelle_with_go_mod)",
     },
+)
+
+go_mod(
+    name = "go_mod_dir",
+    go_mod = ":go.mod",
+    go_sum = ":go.sum",
+    module_path = "github.com/stefanpenner/bazel_go_mod/gazelle_language/go_mod",
+    deps = [":go_mod"],
 )

@@ -120,12 +120,16 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 		return res
 	}
 
-	// Delete any existing go_mod rules and preserve visibility
+	// Delete any existing go_mod rules and preserve visibility and module_path
 	var existingVisibility interface{}
+	var existingModulePath interface{}
 	for _, existingRule := range args.File.Rules {
 		if existingRule.Kind() == "go_mod" {
 			if existingVisibility == nil {
 				existingVisibility = existingRule.Attr("visibility")
+			}
+			if existingModulePath == nil {
+				existingModulePath = existingRule.Attr("module_path")
 			}
 			existingRule.Delete()
 		}
@@ -133,7 +137,12 @@ func (l *goModLanguage) GenerateRules(args language.GenerateArgs) language.Gener
 
 	// Create new go_mod rule
 	r := rule.NewRule("go_mod", "go_mod_dir")
-	r.SetAttr("module_path", modulePath)
+	// Use existing module_path if present, otherwise use the one from go.mod
+	if existingModulePath != nil {
+		r.SetAttr("module_path", existingModulePath)
+	} else {
+		r.SetAttr("module_path", modulePath)
+	}
 	r.SetAttr("go_mod", ":go.mod")
 	if slices.Contains(args.RegularFiles, "go.sum") {
 		r.SetAttr("go_sum", ":go.sum")

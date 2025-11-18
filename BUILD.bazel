@@ -18,8 +18,8 @@ gazelle(
 
 go_mod(
     name = "go_mod_dir",
-    go_mod = ":go.mod",
-    go_sum = ":go.sum",
+    go_mod = "//gazelle_language/go_mod:go.mod",
+    go_sum = "//gazelle_language/go_mod:go.sum",
     module_path = "github.com/stefanpenner/bazel_go_mod",
     deps = ["//gazelle_language/go_mod"],
 )

@@ -15,7 +15,7 @@ go_sdk.download(
 )
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
-go_deps.from_file(go_mod = "//:go.mod")
+go_deps.from_file(go_mod = "//gazelle_language/go_mod:go.mod")
 go_deps.module(
     path = "github.com/google/uuid",
     version = "v1.6.0",

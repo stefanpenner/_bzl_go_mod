@@ -1,4 +1,4 @@
-module github.com/stefanpenner/bazel_go_mod
+module github.com/stefanpenner/bazel_go_mod/gazelle_language/go_mod
 
 go 1.25
 
@@ -16,5 +16,3 @@ require (
 	golang.org/x/tools/go/vcs v0.1.0-deprecated // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/stefanpenner/bazel_go_mod => ../_bazel_go_mod
