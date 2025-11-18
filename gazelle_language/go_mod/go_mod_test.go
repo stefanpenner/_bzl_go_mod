@@ -27,6 +27,54 @@ go 1.25
 		require.NoError(t, err)
 		assert.Equal(t, "example.com/demo", got)
 	})
+
+	t.Run("parses quoted module directive", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, "go.mod")
+
+		const contents = `module "example.com/demo"`
+		require.NoError(t, os.WriteFile(path, []byte(contents), 0o644))
+
+		got, err := parseModulePath(path)
+		require.NoError(t, err)
+		assert.Equal(t, "example.com/demo", got)
+	})
+
+	t.Run("returns error for missing module path", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, "go.mod")
+
+		const contents = `module`
+		require.NoError(t, os.WriteFile(path, []byte(contents), 0o644))
+
+		_, err := parseModulePath(path)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "missing module path")
+	})
+
+	t.Run("returns error for empty module path", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, "go.mod")
+
+		const contents = `module ""`
+		require.NoError(t, os.WriteFile(path, []byte(contents), 0o644))
+
+		_, err := parseModulePath(path)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "empty module path")
+	})
+
+	t.Run("returns error when no module directive found", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, "go.mod")
+
+		const contents = `go 1.25`
+		require.NoError(t, os.WriteFile(path, []byte(contents), 0o644))
+
+		_, err := parseModulePath(path)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no module directive found")
+	})
 }
 
 func TestCollectGoLibraries(t *testing.T) {
@@ -51,7 +99,7 @@ go_library(name = "lib3")
 		}
 	}
 
-	got := collectGoLibraries(f)
+	got := collectGoLibraries(f, "")
 	// In unit tests, ShouldKeep() returns false for all rules, so we get nil/empty result
 	// But we verify the code structure is correct and doesn't panic
 	_ = got // Verify function executes without error
@@ -86,6 +134,7 @@ go_library(name = "lib2")
 
 	args := language.GenerateArgs{
 		Dir:      dir,
+		Rel:      "",
 		File:     f,
 		OtherGen: []*rule.Rule{r3, r4},
 	}
@@ -135,6 +184,7 @@ go_library(name = "lib2")
 
 	args := language.GenerateArgs{
 		Dir:      dir,
+		Rel:      "",
 		File:     f,
 		OtherGen: []*rule.Rule{r3, r4},
 	}
